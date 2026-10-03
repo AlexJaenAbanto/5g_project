@@ -1,0 +1,80 @@
+# Example config for a DU with one 20MHz TDD cell using a USRP as RF frontend.
+f1ap:
+  cu_cp_addr: 192.168.50.21
+  bind_addr: 192.168.50.20
+
+f1u:
+  socket:
+    -
+      bind_addr: 192.168.50.20
+
+ru_sdr:
+  device_driver: uhd
+  device_args: type=b200,master_clock_rate=30.72e6,num_recv_frames=64,num_send_frames=64
+  srate: 30.72
+  otw_format: sc12
+  tx_gain: 60
+  rx_gain: 40
+
+cell_cfg:
+  dl_arfcn: 650000
+  band: 78
+  channel_bandwidth_MHz: 20
+  common_scs: 30
+  plmn: "99970"
+  tac: 7
+  pci: 1
+
+  ssb:
+    ssb_period: 10
+    pss_to_sss_epre_db: 0
+    ssb_block_power_dbm: 0
+
+  prach:
+    prach_config_index: 157
+
+expert_phy:
+  pusch_channel_estimator_td_strategy: average
+  pusch_channel_estimator_cfo_compensation: true
+
+expert_execution:
+  threads:
+    lower_phy:
+      execution_profile: dual
+
+remote_control:
+  enabled: true                        # Optional BOOLEAN (false). Enables the remote control feature. Supported: [false, true].
+  bind_addr: 127.0.0.1                  # Optional TEXT (127.0.0.1). Sets the local IP address to bind for remote control. Format: IPV4 or IPV6 IP address.
+  port: 8001                            # Optional UINT (8001). Sets the port where the remote control server listens. Supported: [0 - 65535].
+
+metrics:
+  autostart_stdout_metrics: false       # Optional BOOLEAN (false). Autostart stdout metrics reporting. Supported: [false, true].
+  enable_json: true                    # Optional BOOLEAN (false). Enables JSON metrics reporting. Supported: [false, true].
+  enable_log: false                     # Optional BOOLEAN (false). Enables log metrics reporting. Supported: [false, true].
+  enable_verbose: false                 # Optional BOOLEAN (false). Enables extended detail metrics reporting. Supported: [false, true].
+  layers:
+    enable_app_usage: true             # Optional BOOLEAN (false). Enables application usage metrics. Supported: [false, true].
+    enable_sched: true                  # Optional BOOLEAN (true). Enables DU scheduler metrics. Supported: [false, true].
+    enable_rlc: true                   # Optional BOOLEAN (false). Enables RLC metrics. Supported: [false, true].
+    enable_mac: true                   # Optional BOOLEAN (false). Enables MAC metrics. Supported: [false, true].
+    enable_du_low: true                # Optional BOOLEAN (false). Enables DU low (upper physical layer) metrics. Supported: [false, true].
+    enable_ru: true                    # Optional BOOLEAN (false). Enables Radio Unit metrics. Supported: [false, true].
+  periodicity:
+    app_usage_report_period: 1000       # Optional UINT (1000). Sets the application resource usage metrics report period in milliseconds.
+    du_report_period: 1000              # Optional UINT (1000). Sets the DU statistics report period in milliseconds. Supported: [0 - 10485760].
+
+log:
+  filename: /tmp/ocudu_access.log
+  all_level: warning
+  phy_level: debug
+  mac_level: debug
+  radio_level: info
+  broadcast_enabled: true 
+
+pcap:
+  mac_enable: false
+  mac_filename: /tmp/ocudu_dual_rf.log
+  f1ap_enable: false
+  f1ap_filename: /tmp/ocudu_dual_rf.log
+  f1u_enable: false
+  f1u_filename: /tmp/ocudu_dual_rf.log
