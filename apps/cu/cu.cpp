@@ -447,7 +447,8 @@ int main(int argc, char** argv)
   o_cucp_deps.broker           = epoll_broker.get();
   o_cucp_deps.xnc_gw           = xnc_gw.get();
   o_cucp_deps.e2_gw            = e2_gw_cu_cp.get();
-  o_cucp_deps.metrics_notifier = &metrics_notifier_forwarder;
+  o_cucp_deps.metrics_notifier       = &metrics_notifier_forwarder;
+  o_cucp_deps.remote_metrics_gateway = remote_server_gateway;
 
   // Create O-CU-CP.
   auto            o_cucp_unit = o_cu_cp_app_unit->create_o_cu_cp(o_cucp_deps);
@@ -465,7 +466,8 @@ int main(int argc, char** argv)
   o_cuup_unit_deps.timers           = cu_timers;
   o_cuup_unit_deps.io_brk           = epoll_broker.get();
   o_cuup_unit_deps.e2_gw            = e2_gw_cu_up.get();
-  o_cuup_unit_deps.metrics_notifier = &metrics_notifier_forwarder;
+  o_cuup_unit_deps.metrics_notifier       = &metrics_notifier_forwarder;
+  o_cuup_unit_deps.remote_metrics_gateway = remote_server_gateway;
 
   // Create O-CU-UP.
   auto            o_cuup_unit = o_cu_up_app_unit->create_o_cu_up_unit(o_cuup_unit_deps);
