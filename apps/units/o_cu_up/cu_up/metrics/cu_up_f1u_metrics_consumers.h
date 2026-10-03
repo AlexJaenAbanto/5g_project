@@ -9,6 +9,10 @@
 
 namespace ocudu {
 
+namespace app_services {
+class remote_server_metrics_gateway;
+} // namespace app_services
+
 namespace ocuup {
 class f1u_metrics_notifier;
 }
@@ -46,11 +50,11 @@ class cu_up_f1u_metrics_consumer_json : public app_services::metrics_consumer
   };
 
 public:
-  cu_up_f1u_metrics_consumer_json(ocudulog::basic_logger& logger_,
-                                  ocudulog::log_channel&  log_chan_,
-                                  task_executor&          executor_,
-                                  unique_timer            timer_,
-                                  unsigned                report_period_ms_);
+  cu_up_f1u_metrics_consumer_json(ocudulog::basic_logger&                      logger_,
+                                  app_services::remote_server_metrics_gateway& gateway_,
+                                  task_executor&                               executor_,
+                                  unique_timer                                 timer_,
+                                  unsigned                                     report_period_ms_);
 
   // See interface for documentation.
   void handle_metric(const app_services::metrics_set& metric) override;
@@ -65,12 +69,12 @@ private:
   // Initialize timer.
   void initialize_timer();
 
-  const unsigned          report_period_ms;
-  ocudulog::basic_logger& logger;
-  ocudulog::log_channel&  log_chan;
-  task_executor&          executor;
-  unique_timer            timer;
-  aggregated_metrics      aggr_metrics;
+  const unsigned                               report_period_ms;
+  ocudulog::basic_logger&                      logger;
+  app_services::remote_server_metrics_gateway& gateway;
+  task_executor&                               executor;
+  unique_timer                                 timer;
+  aggregated_metrics                           aggr_metrics;
 };
 
 /// Consumer for the log F1-U metrics.

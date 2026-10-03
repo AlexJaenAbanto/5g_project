@@ -62,13 +62,14 @@ build_pdcp_metrics_config(std::vector<app_services::metrics_config>&   cu_up_ser
 }
 
 static ocuup::f1u_metrics_notifier*
-build_f1u_metrics_config(std::vector<app_services::metrics_config>& cu_up_services_cfg,
-                         app_services::metrics_notifier&            metrics_notifier,
-                         bool                                       e2_enabled,
-                         e2_cu_metrics_notifier&                    e2_notifier,
-                         const cu_up_unit_metrics_config&           cu_up_metrics_cfg,
-                         worker_manager&                            workers,
-                         timer_manager&                             timers)
+build_f1u_metrics_config(std::vector<app_services::metrics_config>&   cu_up_services_cfg,
+                         app_services::metrics_notifier&              metrics_notifier,
+                         bool                                         e2_enabled,
+                         e2_cu_metrics_notifier&                      e2_notifier,
+                         const cu_up_unit_metrics_config&             cu_up_metrics_cfg,
+                         worker_manager&                              workers,
+                         timer_manager&                               timers,
+                         app_services::remote_server_metrics_gateway* remote_metrics_gateway)
 {
   ocuup::f1u_metrics_notifier* out = nullptr;
 
@@ -87,7 +88,7 @@ build_f1u_metrics_config(std::vector<app_services::metrics_config>& cu_up_servic
   if (unit_metrics_cfg.enable_json_metrics) {
     metrics_cfg.consumers.push_back(
         std::make_unique<cu_up_f1u_metrics_consumer_json>(ocudulog::fetch_basic_logger("APP"),
-                                                          app_helpers::fetch_json_metrics_log_channel(),
+                                                          *remote_metrics_gateway,
                                                           workers.get_metrics_executor(),
                                                           timers.create_unique_timer(workers.get_metrics_executor()),
                                                           cu_up_metrics_cfg.cu_up_report_period));
@@ -178,7 +179,8 @@ o_cu_up_unit ocudu::build_o_cu_up(const o_cu_up_unit_config& unit_cfg, const o_c
                                                       e2_metric_connectors->get_e2_metric_notifier(0),
                                                       unit_cfg.cu_up_cfg.metrics,
                                                       *dependencies.workers,
-                                                      *dependencies.timers);
+                                                      *dependencies.timers,
+                                                      dependencies.remote_metrics_gateway);
 
   for (auto& qos_ : config.cu_up_cfg.qos) {
     qos_.second.pdcp_custom_cfg.metrics_notifier = pdcp_metric_notifier;
