@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (C) 2021-2026 Software Radio Systems Limited
 # SPDX-License-Identifier: BSD-3-Clause-Open-MPI
 
-
 # Example config for a locally deployed CU listening on the localhost interface for a DU connection
 
 cu_cp:
@@ -21,6 +20,30 @@ cu_up:
   f1u:
     socket:
       - bind_addr: 192.168.50.21
+
+remote_control:
+  enabled: true
+  bind_addr: 127.0.0.1
+  port: 8001
+
+metrics:
+  enable_json: true
+  enable_log: false
+  enable_verbose: false
+
+  layers:
+    enable_app_usage: true
+    enable_ngap: true
+    enable_rrc: true
+    enable_e1ap: true
+    enable_pdcp: true
+    enable_nrup_cu: true
+    skip_cu_up_executor: true
+
+  periodicity:
+    app_usage_report_period: 1000
+    cu_cp_report_period: 1000
+    cu_up_report_period: 1000
 
 log:
   filename: /tmp/cu.log
