@@ -8,6 +8,7 @@
 #include "ocudu/cu_up/cu_up_executor_mapper.h"
 #include "ocudu/e1ap/cu_up/e1ap_configuration.h"
 #include "ocudu/e1ap/cu_up/e1ap_cu_up.h"
+#include "ocudu/e1ap/cu_up/e1ap_cu_up_metrics.h"
 #include "ocudu/e1ap/gateways/e1_connection_client.h"
 #include "ocudu/f1u/cu_up/f1u_gateway.h"
 #include "ocudu/gtpu/gtpu_config.h"
@@ -88,6 +89,8 @@ struct cu_up_dependencies {
   dlt_pcap* gtpu_pcap = nullptr;
   /// PDCP metrics notifier.
   pdcp_metrics_notifier* pdcp_metric_notifier = nullptr;
+  /// E1AP CU-UP metrics notifier.
+  e1ap_cu_up_metrics_notifier* e1ap_metric_notifier = nullptr;
   /// E1AP connection client.
   e1_connection_client* e1_conn_client = nullptr;
   /// NG-U gateways

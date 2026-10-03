@@ -4,6 +4,7 @@
 
 
 set(SOURCES
+        e1ap.cpp
         f1u.cpp
         pdcp.cpp)
 

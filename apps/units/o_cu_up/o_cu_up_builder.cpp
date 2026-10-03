@@ -7,6 +7,9 @@
 #include "apps/helpers/metrics/metrics_helpers.h"
 #include "apps/services/worker_manager/worker_manager.h"
 #include "cu_up/cu_up_unit_config_translators.h"
+#include "cu_up/metrics/cu_up_e1ap_metrics.h"
+#include "cu_up/metrics/cu_up_e1ap_metrics_consumers.h"
+#include "cu_up/metrics/cu_up_e1ap_metrics_producer.h"
 #include "cu_up/metrics/cu_up_f1u_metrics_consumers.h"
 #include "cu_up/metrics/cu_up_f1u_metrics_producer.h"
 #include "cu_up/metrics/cu_up_pdcp_metrics_consumers.h"
@@ -16,6 +19,38 @@
 #include "ocudu/cu_up/o_cu_up_factory.h"
 
 using namespace ocudu;
+
+static e1ap_cu_up_metrics_notifier*
+build_e1ap_metrics_config(std::vector<app_services::metrics_config>&   cu_up_services_cfg,
+                          app_services::metrics_notifier&              metrics_notifier,
+                          const cu_up_unit_metrics_config&             cu_up_metrics_cfg,
+                          app_services::remote_server_metrics_gateway* remote_metrics_gateway)
+{
+  e1ap_cu_up_metrics_notifier* out = nullptr;
+
+  if (!cu_up_metrics_cfg.layers_cfg.enable_e1ap) {
+    return out;
+  }
+
+  auto metrics_generator                    = std::make_unique<cu_up_e1ap_metrics_producer_impl>(metrics_notifier);
+  out                                       = &(*metrics_generator);
+  app_services::metrics_config& metrics_cfg = cu_up_services_cfg.emplace_back();
+  metrics_cfg.metric_name                   = cu_up_e1ap_metrics_properties_impl().name();
+  metrics_cfg.callback                      = cu_up_e1ap_metrics_callback;
+  metrics_cfg.producers.push_back(std::move(metrics_generator));
+
+  const app_helpers::metrics_config& unit_metrics_cfg = cu_up_metrics_cfg.common_metrics_cfg;
+  if (unit_metrics_cfg.enable_json_metrics) {
+    metrics_cfg.consumers.push_back(
+        std::make_unique<cu_up_e1ap_metrics_consumer_json>(*remote_metrics_gateway));
+  }
+  if (unit_metrics_cfg.enable_log_metrics) {
+    metrics_cfg.consumers.push_back(
+        std::make_unique<cu_up_e1ap_metrics_consumer_log>(app_helpers::fetch_logger_metrics_log_channel()));
+  }
+
+  return out;
+}
 
 static pdcp_metrics_notifier*
 build_pdcp_metrics_config(std::vector<app_services::metrics_config>&   cu_up_services_cfg,
@@ -164,6 +199,14 @@ o_cu_up_unit ocudu::build_o_cu_up(const o_cu_up_unit_config& unit_cfg, const o_c
     ocu_up_dependencies.e2_client          = dependencies.e2_gw;
     ocu_up_dependencies.e2_cu_metric_iface = &(*e2_metric_connectors).get_e2_metrics_interface(0);
   }
+  auto e1ap_metric_notifier =
+      build_e1ap_metrics_config(ocu_unit.metrics,
+                                *dependencies.metrics_notifier,
+                                unit_cfg.cu_up_cfg.metrics,
+                                dependencies.remote_metrics_gateway);
+
+  ocu_up_dependencies.cu_dependencies.e1ap_metric_notifier = e1ap_metric_notifier;
+
   auto pdcp_metric_notifier = build_pdcp_metrics_config(ocu_unit.metrics,
                                                         *dependencies.metrics_notifier,
                                                         unit_cfg.e2_cfg.base_config.enable_unit_e2,
