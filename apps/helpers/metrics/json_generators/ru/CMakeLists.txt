@@ -4,7 +4,8 @@
 
 
 set(SOURCES
-        ofh.cpp)
+        ofh.cpp
+        sdr.cpp)
 
 add_library(ocudu_ru_metrics_json_generators_helpers STATIC ${SOURCES})
 target_include_directories(ocudu_ru_metrics_json_generators_helpers PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/apps/helpers/metrics)

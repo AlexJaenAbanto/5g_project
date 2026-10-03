@@ -6,6 +6,7 @@
 #include "apps/helpers/metrics/helpers.h"
 #include "apps/helpers/metrics/json_generators/generator_helpers.h"
 #include "apps/helpers/metrics/json_generators/ru/ofh.h"
+#include "apps/helpers/metrics/json_generators/ru/sdr.h"
 #include "apps/services/remote_control/remote_server_metrics_gateway.h"
 #include "ocudu/ru/ru_metrics.h"
 #include "ocudu/support/format/fmt_to_c_str.h"
@@ -29,6 +30,9 @@ void ru_metrics_consumer_json::handle_metric(const ru_metrics& metric)
 {
   if (const auto* ofh_metrics = std::get_if<ofh::metrics>(&metric.metrics)) {
     log_ru_ofh_metrics_json(gateway, *ofh_metrics, pci_sector_map, symbol_duration);
+  } else if (const auto* sdr_metrics = std::get_if<ru_sdr_metrics>(&metric.metrics)) {
+    gateway.send(
+        app_helpers::json_generators::generate_string(*sdr_metrics, pci_sector_map, DEFAULT_JSON_INDENT));
   }
 }
 
