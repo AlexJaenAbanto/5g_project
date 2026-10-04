@@ -126,11 +126,13 @@ static nlohmann::json generate_pdcp_rx(const pdcp_rx_metrics_container& metrics,
   return json;
 }
 
-nlohmann::json ocudu::app_helpers::json_generators::generate(const pdcp_tx_metrics_container& tx,
-                                                             const pdcp_rx_metrics_container& rx,
-                                                             double                           tx_cpu_usage,
-                                                             double                           rx_cpu_usage,
-                                                             timer_duration                   metrics_period)
+nlohmann::json
+ocudu::app_helpers::json_generators::generate(const pdcp_tx_metrics_container&          tx,
+                                              const pdcp_rx_metrics_container&          rx,
+                                              double                                    tx_cpu_usage,
+                                              double                                    rx_cpu_usage,
+                                              timer_duration                            metrics_period,
+                                              const std::vector<pdcp_bearer_metrics>&   bearers)
 {
   nlohmann::json json;
 
@@ -141,15 +143,33 @@ nlohmann::json ocudu::app_helpers::json_generators::generate(const pdcp_tx_metri
   pdcp_json["dl"] = generate_pdcp_tx(tx, metrics_period.count(), tx_cpu_usage);
   pdcp_json["ul"] = generate_pdcp_rx(rx, metrics_period.count(), rx_cpu_usage);
 
+  nlohmann::json& bearers_json = pdcp_json["bearers"];
+  bearers_json                 = nlohmann::json::array();
+
+  for (const pdcp_bearer_metrics& bearer : bearers) {
+    nlohmann::json bearer_json;
+
+    bearer_json["ue_index"] = bearer.ue_index;
+    bearer_json["rb_type"]  = bearer.rb_type == rb_type_t::drb ? "DRB" : "SRB";
+    bearer_json["rb_id"]    = bearer.rb_id;
+
+    bearer_json["dl"] = generate_pdcp_tx(bearer.tx, bearer.metrics_period.count(), bearer.tx_cpu_usage);
+    bearer_json["ul"] = generate_pdcp_rx(bearer.rx, bearer.metrics_period.count(), bearer.rx_cpu_usage);
+
+    bearers_json.push_back(std::move(bearer_json));
+  }
+
   return json;
 }
 
-std::string ocudu::app_helpers::json_generators::generate_string(const pdcp_tx_metrics_container& tx,
-                                                                 const pdcp_rx_metrics_container& rx,
-                                                                 double                           tx_cpu_usage,
-                                                                 double                           rx_cpu_usage,
-                                                                 timer_duration                   metrics_period,
-                                                                 int                              indent)
+std::string
+ocudu::app_helpers::json_generators::generate_string(const pdcp_tx_metrics_container&          tx,
+                                                     const pdcp_rx_metrics_container&          rx,
+                                                     double                                    tx_cpu_usage,
+                                                     double                                    rx_cpu_usage,
+                                                     timer_duration                            metrics_period,
+                                                     const std::vector<pdcp_bearer_metrics>&   bearers,
+                                                     int                                       indent)
 {
-  return generate(tx, rx, tx_cpu_usage, rx_cpu_usage, metrics_period).dump(indent);
+  return generate(tx, rx, tx_cpu_usage, rx_cpu_usage, metrics_period, bearers).dump(indent);
 }

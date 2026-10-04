@@ -34,12 +34,25 @@ cu_up_pdcp_metrics_consumer_json::cu_up_pdcp_metrics_consumer_json(
 
 void cu_up_pdcp_metrics_consumer_json::handle_metric(const app_services::metrics_set& metric)
 {
-  // Implement aggregation.
   const pdcp_metrics_container& pdcp_metric = static_cast<const cu_up_pdcp_metrics_impl&>(metric).get_metrics();
 
+  aggregate_metrics(aggr_metrics, pdcp_metric);
+
+  const bool       is_drb  = pdcp_metric.rb_id.is_drb();
+  const rb_type_t  rb_type = is_drb ? rb_type_t::drb : rb_type_t::srb;
+  const uint8_t    rb_id   = is_drb ? drb_id_to_uint(pdcp_metric.rb_id.get_drb_id())
+                                    : srb_id_to_uint(pdcp_metric.rb_id.get_srb_id());
+  const bearer_key key{pdcp_metric.ue_index, rb_type, rb_id};
+
+  aggregate_metrics(bearer_metrics[key], pdcp_metric);
+}
+
+void cu_up_pdcp_metrics_consumer_json::aggregate_metrics(aggregated_metrics&            aggr,
+                                                         const pdcp_metrics_container& metric)
+{
   // Tx aggregation.
-  const pdcp_tx_metrics_container& tx_metric = pdcp_metric.tx;
-  pdcp_tx_metrics_container&       aggr_tx   = aggr_metrics.tx;
+  const pdcp_tx_metrics_container& tx_metric = metric.tx;
+  pdcp_tx_metrics_container&       aggr_tx   = aggr.tx;
   aggr_tx.num_sdus += tx_metric.num_sdus;
   aggr_tx.num_sdu_bytes += tx_metric.num_sdu_bytes;
   aggr_tx.num_dropped_sdus += tx_metric.num_dropped_sdus;
@@ -62,12 +75,12 @@ void cu_up_pdcp_metrics_consumer_json::handle_metric(const app_services::metrics
     aggr_tx.max_pdu_latency_ns = std::max(aggr_tx.max_pdu_latency_ns.value_or(0), tx_metric.max_pdu_latency_ns.value());
   }
 
-  aggr_metrics.tx_cpu_usage += tx_metric.sum_crypto_processing_latency_ns /
-                               (static_cast<double>(pdcp_metric.metrics_period.count()) * 1e6) * 100.0;
+  aggr.tx_cpu_usage += tx_metric.sum_crypto_processing_latency_ns /
+                       (static_cast<double>(metric.metrics_period.count()) * 1e6) * 100.0;
 
   // Rx aggregation.
-  const pdcp_rx_metrics_container& rx_metric = pdcp_metric.rx;
-  pdcp_rx_metrics_container&       aggr_rx   = aggr_metrics.rx;
+  const pdcp_rx_metrics_container& rx_metric = metric.rx;
+  pdcp_rx_metrics_container&       aggr_rx   = aggr.rx;
 
   aggr_rx.num_pdus += rx_metric.num_pdus;
   aggr_rx.num_pdu_bytes += rx_metric.num_pdu_bytes;
@@ -97,12 +110,12 @@ void cu_up_pdcp_metrics_consumer_json::handle_metric(const app_services::metrics
     aggr_rx.max_sdu_latency_ns = std::max(aggr_rx.max_sdu_latency_ns.value_or(0), rx_metric.max_sdu_latency_ns.value());
   }
 
-  aggr_metrics.rx_cpu_usage += rx_metric.sum_crypto_processing_latency_ns /
-                               (static_cast<double>(pdcp_metric.metrics_period.count()) * 1e6) * 100.0;
+  aggr.rx_cpu_usage += rx_metric.sum_crypto_processing_latency_ns /
+                       (static_cast<double>(metric.metrics_period.count()) * 1e6) * 100.0;
 
-  aggr_metrics.metrics_period = pdcp_metric.metrics_period;
+  aggr.metrics_period = metric.metrics_period;
 
-  aggr_metrics.is_empty = false;
+  aggr.is_empty = false;
 }
 
 void cu_up_pdcp_metrics_consumer_json::print_metrics()
@@ -111,11 +124,26 @@ void cu_up_pdcp_metrics_consumer_json::print_metrics()
     return;
   }
 
+  std::vector<pdcp_bearer_metrics> bearers;
+  bearers.reserve(bearer_metrics.size());
+
+  for (const auto& [key, metrics] : bearer_metrics) {
+    bearers.push_back({key.ue_index,
+                       key.rb_type,
+                       key.rb_id,
+                       metrics.tx,
+                       metrics.rx,
+                       metrics.tx_cpu_usage,
+                       metrics.rx_cpu_usage,
+                       metrics.metrics_period});
+  }
+
   gateway.send(app_helpers::json_generators::generate_string(aggr_metrics.tx,
                                                              aggr_metrics.rx,
                                                              aggr_metrics.tx_cpu_usage,
                                                              aggr_metrics.rx_cpu_usage,
                                                              aggr_metrics.metrics_period,
+                                                             bearers,
                                                              DEFAULT_JSON_INDENT));
 
   // Clear metrics after printing.

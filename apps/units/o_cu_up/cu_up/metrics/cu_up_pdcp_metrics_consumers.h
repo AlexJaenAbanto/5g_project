@@ -6,6 +6,8 @@
 
 #include "cu_up_pdcp_metrics.h"
 #include "ocudu/ocudulog/log_channel.h"
+#include <map>
+#include <tuple>
 
 namespace ocudu {
 
@@ -31,6 +33,17 @@ private:
 /// Consumer for the json CU-UP PDCP metrics.
 class cu_up_pdcp_metrics_consumer_json : public app_services::metrics_consumer
 {
+  struct bearer_key {
+    uint32_t  ue_index;
+    rb_type_t rb_type;
+    uint8_t   rb_id;
+
+    bool operator<(const bearer_key& other) const
+    {
+      return std::tie(ue_index, rb_type, rb_id) < std::tie(other.ue_index, other.rb_type, other.rb_id);
+    }
+  };
+
   struct aggregated_metrics {
     void reset()
     {
@@ -62,11 +75,18 @@ public:
   void handle_metric(const app_services::metrics_set& metric) override;
 
 private:
+  // Aggregate one PDCP metrics report.
+  void aggregate_metrics(aggregated_metrics& aggr, const pdcp_metrics_container& metric);
+
   // Print metrics.
   void print_metrics();
 
   // Clear metrics.
-  void clear_metrics() { aggr_metrics.reset(); }
+  void clear_metrics()
+  {
+    aggr_metrics.reset();
+    bearer_metrics.clear();
+  }
 
   // Initialize timer.
   void initialize_timer();
@@ -77,6 +97,7 @@ private:
   task_executor&                               executor;
   unique_timer                                 timer;
   aggregated_metrics                           aggr_metrics;
+  std::map<bearer_key, aggregated_metrics>     bearer_metrics;
 };
 
 /// Consumer for the log PDCP metrics.
