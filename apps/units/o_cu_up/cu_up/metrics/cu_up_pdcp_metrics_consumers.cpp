@@ -42,12 +42,17 @@ void cu_up_pdcp_metrics_consumer_json::handle_metric(const app_services::metrics
   pdcp_tx_metrics_container&       aggr_tx   = aggr_metrics.tx;
   aggr_tx.num_sdus += tx_metric.num_sdus;
   aggr_tx.num_sdu_bytes += tx_metric.num_sdu_bytes;
+  aggr_tx.num_dropped_sdus += tx_metric.num_dropped_sdus;
   aggr_tx.num_pdus += tx_metric.num_pdus;
   aggr_tx.num_pdu_bytes += tx_metric.num_pdu_bytes;
   aggr_tx.num_discard_timeouts += tx_metric.num_discard_timeouts;
 
   aggr_tx.sum_pdu_latency_ns += tx_metric.sum_pdu_latency_ns;
   aggr_tx.sum_crypto_processing_latency_ns += tx_metric.sum_crypto_processing_latency_ns;
+
+  for (unsigned i = 0; i != tx_metric.pdu_latency_hist.size(); ++i) {
+    aggr_tx.pdu_latency_hist[i] += tx_metric.pdu_latency_hist[i];
+  }
 
   if (tx_metric.min_pdu_latency_ns) {
     aggr_tx.min_pdu_latency_ns =
@@ -79,6 +84,10 @@ void cu_up_pdcp_metrics_consumer_json::handle_metric(const app_services::metrics
   aggr_rx.reordering_delay_us += rx_metric.reordering_delay_us;
   aggr_rx.sum_sdu_latency_ns += rx_metric.sum_sdu_latency_ns;
   aggr_rx.sum_crypto_processing_latency_ns += rx_metric.sum_crypto_processing_latency_ns;
+
+  for (unsigned i = 0; i != rx_metric.sdu_latency_hist.size(); ++i) {
+    aggr_rx.sdu_latency_hist[i] += rx_metric.sdu_latency_hist[i];
+  }
 
   if (rx_metric.min_sdu_latency_ns) {
     aggr_rx.min_sdu_latency_ns =

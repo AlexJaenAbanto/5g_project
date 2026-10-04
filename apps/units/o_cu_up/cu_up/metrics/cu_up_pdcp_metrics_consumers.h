@@ -36,6 +36,8 @@ class cu_up_pdcp_metrics_consumer_json : public app_services::metrics_consumer
     {
       tx             = {};
       rx             = {};
+      tx_cpu_usage   = 0.0;
+      rx_cpu_usage   = 0.0;
       metrics_period = {};
       is_empty       = true;
     }
