@@ -40,11 +40,13 @@ private:
 e1ap_cu_up_impl::e1ap_cu_up_impl(const e1ap_configuration&    e1ap_cfg_,
                                  e1_connection_client&        e1_client_handler_,
                                  e1ap_cu_up_manager_notifier& cu_up_notifier_,
+                                 e1ap_cu_up_metrics_notifier* metrics_notifier_,
                                  timer_manager&               timers_,
                                  task_executor&               cu_up_exec_) :
   e1ap_cfg(e1ap_cfg_),
   logger(ocudulog::fetch_basic_logger("CU-UP-E1")),
   cu_up_notifier(cu_up_notifier_),
+  metrics_notifier(metrics_notifier_),
   timers(timers_),
   cu_up_exec(cu_up_exec_),
   connection_handler(e1_client_handler_, *this, cu_up_notifier_, cu_up_exec),
@@ -55,10 +57,12 @@ e1ap_cu_up_impl::e1ap_cu_up_impl(const e1ap_configuration&    e1ap_cfg_,
   if (e1ap_cfg.metrics_period.count()) {
     metrics_timer = timers.create_unique_timer(cu_up_exec);
     metrics_timer.set(std::chrono::milliseconds(e1ap_cfg.metrics_period), [this](timer_id_t tid) {
-      // TODO push metrics to notifier.
-      auto  m        = metrics.get_metrics_and_reset();
-      auto& m_logger = ocudulog::fetch_basic_logger("METRICS");
-      m_logger.info("CU-UP E1AP metrics: {}", format_e1ap_cu_up_metrics(e1ap_cfg.metrics_period, m));
+      auto m = metrics.get_metrics_and_reset();
+
+      if (metrics_notifier != nullptr) {
+        metrics_notifier->report_metrics(m);
+      }
+
       metrics_timer.run();
     });
     metrics_timer.run();

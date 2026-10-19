@@ -6,6 +6,7 @@
 
 #include "ocudu/e1ap/cu_up/e1ap_configuration.h"
 #include "ocudu/e1ap/cu_up/e1ap_cu_up.h"
+#include "ocudu/e1ap/cu_up/e1ap_cu_up_metrics.h"
 #include "ocudu/e1ap/gateways/e1_connection_client.h"
 #include "ocudu/support/executors/task_executor.h"
 #include "ocudu/support/timers.h"
@@ -18,6 +19,7 @@ namespace ocuup {
 std::unique_ptr<e1ap_interface> create_e1ap(const e1ap_configuration&    e1ap_cfg_,
                                             e1_connection_client&        e1_client_handler_,
                                             e1ap_cu_up_manager_notifier& cu_up_notifier_,
+                                            e1ap_cu_up_metrics_notifier* metrics_notifier_,
                                             timer_manager&               timers_,
                                             task_executor&               cu_up_exec_);
 

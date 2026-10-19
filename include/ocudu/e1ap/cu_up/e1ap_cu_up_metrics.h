@@ -28,6 +28,16 @@ struct e1ap_cu_up_metrics_container {
   std::chrono::microseconds               max_release_latency;
 };
 
+/// \brief Notifier interface used to report E1AP CU-UP metrics.
+class e1ap_cu_up_metrics_notifier
+{
+public:
+  virtual ~e1ap_cu_up_metrics_notifier() = default;
+
+  /// \brief Called periodically to report the latest E1AP CU-UP metrics.
+  virtual void report_metrics(const e1ap_cu_up_metrics_container& metrics) = 0;
+};
+
 inline std::string format_e1ap_cu_up_metrics(timer_duration metrics_period, const e1ap_cu_up_metrics_container& m)
 {
   fmt::memory_buffer buffer;
@@ -48,7 +58,7 @@ inline std::string format_e1ap_cu_up_metrics(timer_duration metrics_period, cons
   for (unsigned i = 0; i < e1ap_cu_up_metrics_container::latency_hist_bins; i++) {
     fmt::format_to(std::back_inserter(buffer), " {}", float_to_eng_string(m.release_latency_hist[i], 1, false));
   }
-  fmt::format_to(std::back_inserter(buffer), "] max_release_latency={}", m.max_release_latency);
+  fmt::format_to(std::back_inserter(buffer), "] max_release_latency_us={}", m.max_release_latency.count());
   return to_c_str(buffer);
 }
 

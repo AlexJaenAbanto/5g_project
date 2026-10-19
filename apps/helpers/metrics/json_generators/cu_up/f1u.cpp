@@ -4,6 +4,8 @@
 
 #include "f1u.h"
 #include "helpers.h"
+#include "ocudu/f1u/cu_up/f1u_rx_metrics.h"
+#include "ocudu/f1u/cu_up/f1u_tx_metrics.h"
 
 using namespace ocudu;
 using namespace app_helpers;
@@ -13,7 +15,12 @@ static nlohmann::json generate_f1u_tx(const ocuup::f1u_tx_metrics_container& met
 {
   nlohmann::json json;
 
-  // TODO: fill json fields
+  json["num_sdus"]         = metrics.num_sdus;
+  json["num_sdu_bytes"]    = metrics.num_sdu_bytes;
+  json["throughput_mbps"]  = period != 0 ? static_cast<double>(metrics.num_sdu_bytes) * 8.0 / (period * 1000.0) : 0.0;
+  json["num_dropped_sdus"] = metrics.num_dropped_sdus;
+  json["num_sdu_discards"] = metrics.num_sdu_discards;
+  json["num_pdus"]         = metrics.num_pdus;
 
   return json;
 }
@@ -22,7 +29,13 @@ static nlohmann::json generate_f1u_rx(const ocuup::f1u_rx_metrics_container& met
 {
   nlohmann::json json;
 
-  // TODO: fill json fields
+  json["num_pdus"]          = metrics.num_pdus;
+  json["num_dropped_pdus"]  = metrics.num_dropped_pdus;
+  json["num_sdus"]          = metrics.num_sdus;
+  json["num_sdu_bytes"]     = metrics.num_sdu_bytes;
+  json["throughput_mbps"]   = period != 0 ? static_cast<double>(metrics.num_sdu_bytes) * 8.0 / (period * 1000.0) : 0.0;
+  json["num_dds"]           = metrics.num_dds;
+  json["num_dds_failures"]  = metrics.num_dds_failures;
 
   return json;
 }

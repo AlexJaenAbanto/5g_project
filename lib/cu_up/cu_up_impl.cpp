@@ -135,6 +135,7 @@ cu_up::cu_up(const cu_up_config& config_, const cu_up_dependencies& dependencies
   e1ap = create_e1ap(cfg.e1ap,
                      *dependencies.e1_conn_client,
                      e1ap_cu_up_mng_adapter,
+                     dependencies.e1ap_metric_notifier,
                      *dependencies.timers,
                      dependencies.exec_mapper->ctrl_executor());
 

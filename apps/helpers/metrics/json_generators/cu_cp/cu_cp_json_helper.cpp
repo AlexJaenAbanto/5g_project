@@ -86,6 +86,13 @@ void to_json(nlohmann::json& json, const rrc_connection_counter_with_cause& metr
   }
 }
 
+void to_json(nlohmann::json& json, const rrc_connection_fail_counter_with_cause& metrics)
+{
+  json["network_reject"] = metrics.get_count(establishment_fail_cause_t::network_reject);
+  json["no_reply"]       = metrics.get_count(establishment_fail_cause_t::no_reply);
+  json["other"]          = metrics.get_count(establishment_fail_cause_t::other);
+}
+
 void to_json(nlohmann::json& json, const ocudu::cu_cp_metrics_report::du_info& metrics)
 {
   // RRC-DU metrics.
@@ -101,6 +108,8 @@ void to_json(nlohmann::json& json, const ocudu::cu_cp_metrics_report::du_info& m
       metrics.rrc_metrics.attempted_rrc_connection_establishments;
   rrc_connection_establishment["successful_rrc_connection_establishments"] =
       metrics.rrc_metrics.successful_rrc_connection_establishments;
+  rrc_connection_establishment["failed_rrc_connection_establishments"] =
+      metrics.rrc_metrics.failed_rrc_connection_establishments;
 
   nlohmann::json& rrc_connection_reestablishment = json["rrc_connection_reestablishment"];
   rrc_connection_reestablishment["attempted_rrc_connection_reestablishments"] =

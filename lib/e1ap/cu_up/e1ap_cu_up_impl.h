@@ -24,6 +24,7 @@ public:
   e1ap_cu_up_impl(const e1ap_configuration&    e1ap_cfg_,
                   e1_connection_client&        e1_client_handler_,
                   e1ap_cu_up_manager_notifier& cu_up_notifier_,
+                  e1ap_cu_up_metrics_notifier* metrics_notifier_,
                   timer_manager&               timers_,
                   task_executor&               cu_up_exec_);
   ~e1ap_cu_up_impl() override;
@@ -104,6 +105,7 @@ private:
 
   // nofifiers and handles
   e1ap_cu_up_manager_notifier& cu_up_notifier;
+  e1ap_cu_up_metrics_notifier* metrics_notifier;
 
   timer_manager& timers;
   task_executor& cu_up_exec;

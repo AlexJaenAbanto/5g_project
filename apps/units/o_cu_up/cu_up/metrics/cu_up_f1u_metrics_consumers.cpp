@@ -4,6 +4,8 @@
 
 #include "cu_up_f1u_metrics_consumers.h"
 #include "apps/helpers/metrics/json_generators/cu_up/f1u.h"
+#include "apps/helpers/metrics/json_generators/generator_helpers.h"
+#include "apps/services/remote_control/remote_server_metrics_gateway.h"
 #include "cu_up_f1u_metrics.h"
 #include "ocudu/f1u/cu_up/f1u_metrics.h"
 
@@ -15,13 +17,13 @@ void cu_up_f1u_metrics_consumer_e2::handle_metric(const app_services::metrics_se
 }
 
 cu_up_f1u_metrics_consumer_json::cu_up_f1u_metrics_consumer_json(ocudulog::basic_logger& logger_,
-                                                                 ocudulog::log_channel&  log_chan_,
+                                                                 app_services::remote_server_metrics_gateway& gateway_,
                                                                  task_executor&          executor_,
                                                                  unique_timer            timer_,
                                                                  unsigned                report_period_ms_) :
   report_period_ms(report_period_ms_),
   logger(logger_),
-  log_chan(log_chan_),
+  gateway(gateway_),
   executor(executor_),
   timer(std::move(timer_))
 {
@@ -41,16 +43,21 @@ void cu_up_f1u_metrics_consumer_json::handle_metric(const app_services::metrics_
   // Tx aggregation.
   const ocuup::f1u_tx_metrics_container& tx_metric = f1u_metric.tx;
   ocuup::f1u_tx_metrics_container&       aggr_tx   = aggr_metrics.tx;
-  // TODO: aggregate TX
-  (void)tx_metric;
-  (void)aggr_tx;
+  aggr_tx.num_sdus += tx_metric.num_sdus;
+  aggr_tx.num_sdu_bytes += tx_metric.num_sdu_bytes;
+  aggr_tx.num_dropped_sdus += tx_metric.num_dropped_sdus;
+  aggr_tx.num_sdu_discards += tx_metric.num_sdu_discards;
+  aggr_tx.num_pdus += tx_metric.num_pdus;
 
   // Rx aggregation.
   const ocuup::f1u_rx_metrics_container& rx_metric = f1u_metric.rx;
   ocuup::f1u_rx_metrics_container&       aggr_rx   = aggr_metrics.rx;
-  // TODO: aggregate RX
-  (void)rx_metric;
-  (void)aggr_rx;
+  aggr_rx.num_pdus += rx_metric.num_pdus;
+  aggr_rx.num_dropped_pdus += rx_metric.num_dropped_pdus;
+  aggr_rx.num_sdus += rx_metric.num_sdus;
+  aggr_rx.num_sdu_bytes += rx_metric.num_sdu_bytes;
+  aggr_rx.num_dds += rx_metric.num_dds;
+  aggr_rx.num_dds_failures += rx_metric.num_dds_failures;
 
   aggr_metrics.metrics_period = f1u_metric.metrics_period;
 
@@ -63,9 +70,8 @@ void cu_up_f1u_metrics_consumer_json::print_metrics()
     return;
   }
 
-  log_chan(
-      "{}",
-      app_helpers::json_generators::generate_string(aggr_metrics.tx, aggr_metrics.rx, aggr_metrics.metrics_period, 2));
+  gateway.send(app_helpers::json_generators::generate_string(
+      aggr_metrics.tx, aggr_metrics.rx, aggr_metrics.metrics_period, DEFAULT_JSON_INDENT));
 
   // Clear metrics after printing.
   clear_metrics();
