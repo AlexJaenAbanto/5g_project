@@ -44,7 +44,7 @@ expert_execution:
 
 remote_control:
   enabled: true                        # Optional BOOLEAN (false). Enables the remote control feature. Supported: [false, true].
-  bind_addr: 127.0.0.1                  # Optional TEXT (127.0.0.1). Sets the local IP address to bind for remote control. Format: IPV4 or IPV6 IP address.
+  bind_addr: 192.168.50.20                  # Optional TEXT (127.0.0.1). Sets the local IP address to bind for remote control. Format: IPV4 or IPV6 IP address.
   port: 8001                            # Optional UINT (8001). Sets the port where the remote control server listens. Supported: [0 - 65535].
 
 metrics:
@@ -65,7 +65,7 @@ metrics:
 
 log:
   filename: /tmp/ocudu_access.log
-  all_level: warning
+  all_level: info
   phy_level: debug
   mac_level: debug
   radio_level: info
